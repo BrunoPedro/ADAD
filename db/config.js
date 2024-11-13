@@ -1,6 +1,6 @@
 import { MongoClient } from "mongodb";
 
-const connectionString = "<You'r string>";
+const connectionString = "<Your string>";
 const client = new MongoClient(connectionString);
 
 let db;
