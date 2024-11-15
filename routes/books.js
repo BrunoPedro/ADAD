@@ -49,7 +49,7 @@ router.put("/:id", async (req, res) => {
   const updatedData = req.body;
 
   if (!updatedData || Object.keys(updatedData).length === 0) {
-    return res.status(400).send({ message: "No data to update" });
+    return res.status(400).send({ message: "Sem dados para atualizar" });
   }
 
   try {
@@ -64,7 +64,7 @@ router.put("/:id", async (req, res) => {
 
     res.status(200).send({ message: "Livro atualizado com sucesso", result });
   } catch (error) {
-    console.error("Error updating book:", error);
+    console.error("Erro ao atualizar o livro:", error);
     res.status(500).send({ error: "Erro ao atualizar o livro", details: error });
   }
 });
@@ -113,7 +113,7 @@ router.get("/top/:limit", async (req, res) => {
       res.status(200).send({ results: books });
     }
   } catch (error) {
-    console.error("Error fetching top books:", error);
+    console.error("Erro ao buscar os melhores livros:", error);
     res.status(500).send({ error: "Erro ao buscar os melhores livros", details: error });
   }
 });
@@ -125,7 +125,7 @@ router.get("/ratings/:order", async (req, res) => {
   const { order } = req.params;
 
   if (order !== "asc" && order !== "desc") {
-    return res.status(400).send({ message: "Invalid order parameter. Use 'asc' or 'desc'." });
+    return res.status(400).send({ message: "Parametros inválidos. Use 'asc' or 'desc'." });
   }
 
   const sortOrder = order === "asc" ? 1 : -1;
@@ -162,8 +162,8 @@ router.get("/ratings/:order", async (req, res) => {
     const books = await db.collection("users").aggregate(pipeline).toArray();
     res.status(200).send(books);
   } catch (error) {
-    console.error("Error fetching books by review count:", error);
-    res.status(500).send({ error: "Failed to fetch books by review count", details: error });
+    console.error("Erro ao buscar livros ordenados por reviews:", error);
+    res.status(500).send({ error: "Erro ao buscar livros ordenados por reviews", details: error });
   }
 });
 
@@ -238,9 +238,9 @@ router.get("/star", async (req, res) => {
 
     res.status(200).send(response);
   } catch (error) {
-    console.error("Error fetching books with 5-star reviews:", error);
+    console.error("Erro ao buscar livros com reviews com mais de 5 estrelas:", error);
     res.status(500).send({
-      error: "Failed to fetch books with more than five 5-star reviews",
+      error: "Falha ao buscar livros com reviews com mais de 5 estrelas",
       details: error,
     });
   }
@@ -261,7 +261,7 @@ router.get("/year/:year", async (req, res) => {
 
     res.status(200).send(books);
   } catch (error) {
-    res.status(500).send({ error: "Erro ao buscar livros do ano", details: error });
+    res.status(500).send({ error: "Erro ao buscar livros do ano especificado", details: error });
   }
 });
 
