@@ -15,11 +15,11 @@ router.put("/:id", async (req, res) => {
         { $set: updatedData }
       );
       if (result.matchedCount === 0) {
-        return res.status(404).send({ message: "Usuário não encontrado" });
+        return res.status(404).send({ message: "User não encontrado" });
       }
-      res.status(200).send({ message: "Usuário atualizado com sucesso", result });
+      res.status(200).send({ message: "User atualizado com sucesso", result });
     } catch (error) {
-      res.status(500).send({ error: "Erro ao atualizar o usuário", details: error });
+      res.status(500).send({ error: "Erro ao atualizar o user", details: error });
     }
   });
   
