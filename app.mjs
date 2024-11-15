@@ -3,8 +3,6 @@ import books from "./routes/books.js";
 import comments from "./routes/comments.js";
 import users from "./routes/users.js";
 import livrarias from "./routes/livrarias.js";
-// Add a placeholder for users if needed
-// import users from "./routes/users.js";
 
 const app = express();
 const port = 3000;
@@ -15,8 +13,6 @@ app.use("/books", books);
 app.use("/comments", comments);
 app.use("/users", users);
 app.use("/livrarias", livrarias);
-// Uncomment this line if you have a `users.js` file:
-// app.use("/users", users);
 
 app.listen(port, () => {
   console.log(`Backend listening on port ${port}`);
