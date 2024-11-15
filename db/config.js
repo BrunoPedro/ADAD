@@ -6,12 +6,12 @@ const client = new MongoClient(connectionString);
 let db;
 
 try {
-  console.log("Connecting to the database...");
+  console.log("A conectar à base de dados...");
   const conn = await client.connect();
-  console.log("Database connection successful.");
+  console.log("Conexão à base de dados com sucesso.");
   db = conn.db("projeto"); // Connect to the database
 } catch (e) {
-  console.error("Failed to connect to the database", e);
+  console.error("Falha na conexão à base de dados", e);
   process.exit(1); // Exit the process if the database connection fails
 }
 
