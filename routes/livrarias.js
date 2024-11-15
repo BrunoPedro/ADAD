@@ -1,24 +1,50 @@
 import express from "express";
 import db from "../db/config.js";
 import { ObjectId } from "mongodb";
-import { geometry } from "@turf/turf";
+import { point, booleanPointInPolygon } from '@turf/turf';
 
 const router = express.Router();
 
-// GET /livrarias - Retorna as primeiras 50 livrarias
+// GET /livrarias 
 router.get("/", async (req, res) => {
+  const page = parseInt(req.query.page) || 1; 
+  const pageSize = 20;  
+  const skip = (page - 1) * pageSize;  
+
   try {
-    console.log("Buscando livrarias no banco de dados...");
-    const results = await db.collection("livrarias").find({}).limit(50).toArray();
+    const results = await db.collection("livrarias")
+      .find({})
+      .skip(skip) 
+      .limit(pageSize)  
+      .toArray();
+
+    const totalLivrarias = await db.collection("livrarias").countDocuments();
+
+    const totalPages = Math.ceil(totalLivrarias / pageSize);
+
+    const nextPage = page < totalPages ? `${req.protocol}://${req.get('host')}/livrarias?page=${page + 1}` : null;
+    const prevPage = page > 1 ? `${req.protocol}://${req.get('host')}/livrarias?page=${page - 1}` : null;
+
+    const response = {
+      info: {
+        count: totalLivrarias,
+        pages: totalPages,
+        next: nextPage,
+        prev: prevPage,
+      },
+      results: results,
+    };
+
     console.log("Livrarias encontradas com sucesso:", results);
-    res.status(200).send(results);
+    res.status(200).send(response);
   } catch (error) {
     console.error("Erro ao buscar livrarias:", error);
-    res.status(500).send({ error: "Falha ao buscar livrarias" });
+    res.status(500).send({ error: "Falha ao buscar livrarias", details: error });
   }
 });
 
-// PUT /livrarias/:id - Atualiza uma livraria pelo ID
+
+// PUT /livrarias/:id
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const updatedData = req.body;
@@ -54,7 +80,7 @@ router.post("/perto", async (req, res) => {
 
   try {
     const livrarias = await db.collection("livrarias").find({}).toArray();
-    const limite = distanciaLimite || 0.5; // Distância limite em km
+    const limite = distanciaLimite || 0.5; 
     const turf = await import("@turf/turf");
     const linhaDaRota = turf.lineString(rota);
 
@@ -72,31 +98,7 @@ router.post("/perto", async (req, res) => {
   }
 });
 
-// GET /livrarias/freguesia/:freguesia - Filtra livrarias por freguesia
-router.get("/freguesia/:freguesia", async (req, res) => {
-  const { freguesia } = req.params;
 
-  try {
-    const livrarias = await db.collection("livrarias").find({ "properties.FREGUESIA": freguesia }).toArray();
-    res.status(200).send(livrarias);
-  } catch (error) {
-    console.error("Erro ao buscar livrarias por freguesia:", error);
-    res.status(500).send({ error: "Erro ao buscar livrarias", details: error });
-  }
-});
-
-// GET /livrarias/nome/:nome - Busca livrarias pelo nome
-router.get("/nome/:nome", async (req, res) => {
-  const { nome } = req.params;
-
-  try {
-    const livrarias = await db.collection("livrarias").find({ "properties.INF_NOME": { $regex: nome, $options: "i" } }).toArray();
-    res.status(200).send(livrarias);
-  } catch (error) {
-    console.error("Erro ao buscar livrarias pelo nome:", error);
-    res.status(500).send({ error: "Erro ao buscar livrarias", details: error });
-  }
-});
 
 // DELETE /livrarias/:id - Remove uma livraria pelo ID
 router.delete("/:id", async (req, res) => {
@@ -148,59 +150,43 @@ catch(err){res.status(500).send({error : err.message})}
 
 
 
-// Rota
-router.get('/livraria_na_feira_livro/:id', async (req, res) => {
+// POST /livrarias/check-point 
+router.post("/check-point", async (req, res) => {
+  const { point: inputPoint } = req.body;
+
+  if (!inputPoint || inputPoint.length !== 2 || isNaN(inputPoint[0]) || isNaN(inputPoint[1])) {
+    return res.status(400).send({ message: "Invalid point data. Must be [longitude, latitude]." });
+  }
+
   try {
-    const livrariasCollection = db.collection('livrarias');
-
-    // Ensure that an index is created for geo queries
-    await livrariasCollection.createIndex({ "geometry.coordinates": "2d" });
-
-    // Define the polygon coordinates (example)
-    const polygon = [
-      [
-        [-9.14217296415889, 38.7155597377788],
-        [-9.14632734020411, 38.7202915388439],
-        [-9.14875439274829, 38.7208771016563],
-        [-9.1621026515977, 38.7236706345087],
-        [-9.14217296415889, 38.7155597377788]
+    const polygon = {
+      type: "Polygon",
+      coordinates: [
+        [
+          [-9.14217296415889, 38.7155597377788],
+          [-9.14632734020411, 38.7202915388439],
+          [-9.14875439274829, 38.7208771016563],
+          [-9.1621026515977, 38.7236706345087],
+          [-9.14217296415889, 38.7155597377788] 
+        ]
       ]
-    ];
+    };
 
-    const libraryId = parseInt(req.params.id); // For numeric ID
-    const library = await livrariasCollection.findOne({ _id: libraryId });
+    const geoJsonPoint = point(inputPoint);
 
-    if (!library) {
-      return res.status(404).send({ message: "Library not found." });
-    }
+    const isInside = booleanPointInPolygon(geoJsonPoint, polygon);
 
-    // Get the coordinates of the specific library
-    const libraryCoordinates = library.geometry.coordinates;
-
-    // Check if the library's coordinates are inside the polygon
-    const isInside = await livrariasCollection.findOne({
-      "geometry.coordinates": {
-        $geoWithin: {
-          $geometry: {
-            type: "Polygon",
-            coordinates: polygon
-          }
-        }
-      },
-      _id: libraryId // Ensure we're checking for the specific library
-    });
-
-    // Return the appropriate message
     if (isInside) {
-      res.status(200).send({ message: "The library is inside the polygon." });
+      return res.status(200).send({ message: "Point is inside the polygon" });
     } else {
-      res.status(200).send({ message: "The library is outside the polygon." });
+      return res.status(200).send({ message: "Point is outside the polygon" });
     }
 
-  } catch (err) {
-    res.status(500).send({ error: err.message });
+  } catch (error) {
+    console.error("Error processing the request:", error);
+
+    return res.status(500).send({ error: "Error processing the request", details: error.message || error });
   }
 });
-
 
 export default router;
