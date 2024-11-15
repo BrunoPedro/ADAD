@@ -42,8 +42,8 @@ router.get("/", async (req, res) => {
       console.log("Comments fetched successfully:", results);
       res.status(200).send(response); 
     } catch (error) {
-      console.error("Error fetching comments:", error);
-      res.status(500).send({ error: "Error fetching comments", details: error });
+      console.error("Erro ao buscar os comentários:", error);
+      res.status(500).send({ error: "Erro ao buscar os comentários", details: error });
     }
   });
   
@@ -53,7 +53,7 @@ router.post("/", async (req, res) => {
     const { book_id, comment, user_id } = req.body;
 
     if (!book_id || !comment || !user_id) {
-        return res.status(400).send({ message: "book_id, comment, and user_id are required." });
+        return res.status(400).send({ message: "book_id, comment, and user_id são obrigatórios." });
     }
 
     try {
@@ -72,12 +72,12 @@ router.post("/", async (req, res) => {
         const result = await db.collection("comments").insertOne(newComment);
 
         res.status(201).send({
-            message: "Comment added successfully",
+            message: "Comentário adicionado com sucesso",
             comment: newComment,
         });
     } catch (error) {
-        console.error("Error adding comment:", error);
-        res.status(500).send({ error: "Error adding comment", details: error });
+        console.error("Erro ao adicionar comentário:", error);
+        res.status(500).send({ error: "Erro ao adicionar comentário", details: error });
     }
 });
 
@@ -85,20 +85,20 @@ router.delete("/:id", async (req, res) => {
     const commentId = parseInt(req.params.id); 
 
     if (isNaN(commentId)) {
-        return res.status(400).send({ message: "Invalid _id. It should be a valid integer." });
+        return res.status(400).send({ message: "Invalido _id. deveria ser um inteiro." });
     }
 
     try {
         const result = await db.collection("comments").deleteOne({ _id: commentId });
 
         if (result.deletedCount === 0) {
-            return res.status(404).send({ message: "Comment not found with the provided _id." });
+            return res.status(404).send({ message: "Comentário não encontrado para o _id fornecido." });
         }
 
         res.status(200).send({ message: "Comment deleted successfully." });
     } catch (error) {
-        console.error("Error deleting comment:", error);
-        res.status(500).send({ error: "Error deleting comment", details: error });
+        console.error("Erro ao apagar comentário:", error);
+        res.status(500).send({ error: "Erro ao apagar comentário", details: error });
     }
 });
 
