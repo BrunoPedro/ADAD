@@ -114,7 +114,7 @@ router.delete("/:id", async (req, res) => {
     res.status(200).send({ message: "Livraria removida com sucesso" });
   } catch (error) {
     console.error("Erro ao deletar livraria:", error);
-    res.status(500).send({ error: "Erro ao deletar livraria", details: error });
+    res.status(500).send({ error: "Erro ao apagar livraria", details: error });
   }
 });
 
@@ -155,7 +155,7 @@ router.post("/check-point", async (req, res) => {
   const { point: inputPoint } = req.body;
 
   if (!inputPoint || inputPoint.length !== 2 || isNaN(inputPoint[0]) || isNaN(inputPoint[1])) {
-    return res.status(400).send({ message: "Invalid point data. Must be [longitude, latitude]." });
+    return res.status(400).send({ message: "Ponto inválido. Deve ser [longitude, latitude]." });
   }
 
   try {
@@ -177,15 +177,15 @@ router.post("/check-point", async (req, res) => {
     const isInside = booleanPointInPolygon(geoJsonPoint, polygon);
 
     if (isInside) {
-      return res.status(200).send({ message: "Point is inside the polygon" });
+      return res.status(200).send({ message: "User está dentro da feira do livro" });
     } else {
-      return res.status(200).send({ message: "Point is outside the polygon" });
+      return res.status(200).send({ message: "User está fora da feira do livro" });
     }
 
   } catch (error) {
-    console.error("Error processing the request:", error);
+    console.error("Erro ao processar o pedido:", error);
 
-    return res.status(500).send({ error: "Error processing the request", details: error.message || error });
+    return res.status(500).send({ error: "Erro ao processar o pedido", details: error.message || error });
   }
 });
 
